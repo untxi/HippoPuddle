@@ -28,34 +28,31 @@ function validationLink($url){
 }
 // *****************************************************************//
 function getLinks($myURL){
-	//Variables
+	include('simple_html_dom.php');
+
 	$MyLinks = array();
 	$html = file_get_html($myURL);
 	$collection = $html->find('a');
+	//print_r(collection_values($collection));
 
 	//abro el archivo donde voy a escribir los links de la collecion de <a> del html
 	$file="/var/www/html/hippoPuddle_web/FilesOfSystem/link_txt.txt";
 	$myfile = fopen($file, "w") or die("Unable to open file!");
 
-	// limita los links para recursion a 50
-	if (count($collection) > 50){
-		$limitQurl = 50;
-	}else{
-		$limitQurl = count($collection);
-	}
-
 	// escribir cada link
-	for ($i = 0; $i <  $limitQurl; $i++) {
+	for ($i = 0; $i <  count($collection); $i++) {
 	    $key=key($collection);
 	    $val=$collection[$key];
+	    $val=$val->getAttribute( 'href' );
 	    if ($val<> ' ') {
-	      fwrite($myfile, $val. PHP_EOL); //escribir links en el TXT MADRE
-	      array_push($MyLinks, $val);    // agregarlos al array
+	      //escribir links en el txt
+	      fwrite($myfile, $val. PHP_EOL);
+	      array_push($MyLinks, $val); 
 	    }
-	    next($collection);
+	     next($collection);
 	}
-	fclose($myfile);	//cerrar archivo
-
+	//cerrar archivo
+	fclose($myfile);
 	return $MyLinks;
 }
 // *****************************************************************//
@@ -66,10 +63,16 @@ function readData($url){
     $title = $doc->getElementsByTagName('title');
     $myTitle = $title->item(0)->nodeValue;
     $p = $doc->getElementsByTagName('p');
-    $myText = $p->item(0)->nodeValue;
-    $mytag = "code";
-
-    return array($myTitle,  $myTag, $myText);
+    $myTag  = "musica";
+    $myText = "";
+    //echo $myTag . "<br>";
+    //echo $url . "<br>";
+    //echo $myTitle ."<br>";
+    for ($i=0; $i < $p->length;$i++){
+        $myText = $myText.$myLine= $p->item($i)->nodeValue;
+    }
+    //echo $myText;
+    return array($myTitle, $myTag, $myText);
 }
 // *****************************************************************//
 function getNextID($link, $title, $Tag)){
@@ -79,36 +82,21 @@ function getNextID($link, $title, $Tag)){
  	return count($xml);
 }
 // *****************************************************************//
- /*function writeXML($pTitle,$pTag,$pLink,$pText){
-	$id = getNextID();
-	//$xmlstr=<<<XML
-	//<lead>
-	//</lead>
-	//XML;
+function writeTXT($pLink, $pText){
+  //abre el archivo
+  $file="/var/www/html/hippoPuddle_web/FilesOfSystem/word_by_link.txt";
+  $myfile = fopen($file, "w") or die("Unable to open file!");
+  
+  $pText = preg_split("/[\s,:';\.]+/", $pText);
 
-	$sxe = new SimpleXMLElement(<lead></lead>);//$xmlstr);
-	$sxe->addAttribute('type', 'documentary');
+  for($i=0; $i < count($pText);$i++){
+    //echo $pText[$i]."    ".$pLink."<br>";
+    $value = $pText[$i]."\t".$pLink;
+    fwrite($myfile, $value. PHP_EOL);
+  }
 
-	// crea el puntero que va a ser la hoja del xml
-	$myLead = $sxe->addChild('Lead');
-	//agrega las "propiedades" de la hoja
-	//                tag xml   contenido del tag
-	$myLead->addChild('ID',$id);
-	$myLead->addChild('title',$pTitle);
-	$myLead->addChild('tag',  $pTag);
-	$myLead->addChild('link', $pLink);
-	$myLead->addChild('text', $pText);
-
-
-	$dom = new DOMDocument('1.0');
-	$dom->preserveWhiteSpace = false;
-	$dom->formatOutput = true;
-	$dom->loadXML($sxe->asXML());
-	//Echo XML - remove this and following line if echo not desired
-	echo $dom->saveXML();
-	//Save XML to file - remove this and following line if save not desired
-	$dom->save('/var/www/html/hippoPuddle_web/FilesOfSystem/write_links.xml');//aquí va su archivo de contenido
-}*/
+  fclose($myfile);
+}
 // *****************************************************************//
 function saveDB($pWord,$pInText,$pUrl,$pTitle){
 	$servername = "localhost";
@@ -123,10 +111,9 @@ function saveDB($pWord,$pInText,$pUrl,$pTitle){
 	if ($conn->connect_error) {
 	    die("Connection failed: " . $conn->connect_error);
 	}
-
-	$sql = "INSERT INTO Words (Word, WordsInText, Link)
-	VALUES ('MySQLi', 10 , 'http://www.w3schools.com/php/php_mysql_insert.asp')";
-
+	
+	$sql = "INSERT INTO `hippopuddle`.`Words` (`Word_ID`, `Word`, `WordsInText`, `Link`, `Title`) VALUES (NULL, \'a\', \'1\', \'a\', \'a\');";
+	
 	if ($conn->query($sql) === TRUE) {
 	    echo "New record created successfully";
 	} else {
@@ -142,7 +129,9 @@ $setRec es el límite de recursión para evitar ciclos infinitos
 */
 
 function save($pLinks,$setRec = 10){
+	
 	$source = readData($pLink);
+
 	$pUrl   = $pLinks;
 	$pTitle = $source[0];
 	$pTag   = $source[1];
