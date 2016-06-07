@@ -1,37 +1,38 @@
 <!
 DOCTYPE html>
 <html>
-<head>
-  <title></title>
-</head>
 <body>
-<?php
-function saveDB($pWord,$pInText,$pUrl,$pTitle){
-  $servername = "localhost";
-  $username = "root";
-  $password = "myxu";
-  $dbname = "hippopuddle";
+ <?php
+function saveDB($pWord, $pWordsInText, $pLink, $pTitle){
+$servername = "localhost";
+$username = "root";
+$password = "myxu";
+$dbname = "hippopuddle";
 
-  // Create connection
-  $conn = new mysqli($servername, $username, $password, $dbname);
+// Create connection
+$conn = new mysqli($servername, $username, $password, $dbname);
 
-  // Check connection
-  if ($conn->connect_error) {
-      die("Connection failed: " . $conn->connect_error);
-  }
- 
-  $sql = "INSERT INTO `hippopuddle`.`Words` (`Word_ID`, `Word`, `WordsInText`, `Link`, `Title`) VALUES (NULL, 'a', '1', 'a', 'a');"; 
-  if ($conn->query($sql) === TRUE) {
-      echo "New record created successfully";
-  } else {
-      echo "Error: " . $sql . "<br>" . $conn->error;
-  }
-
-$conn->close();
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
 }
 
-saveDB("hola", "2", "hola.com", "Saludos");
-?>
-  
+// prepare and bind
+
+
+// set parameters and execute
+$Word = $pWord;
+$WordsInText = $pWordsInText;
+$Link = $pLink;
+$Title = $pTitle;
+$stmt->execute();
+
+echo "New records created successfully";
+
+$stmt->close();
+$conn->close();
+}
+saveDB("a", 1, "abc.com", "abc");
+?> 
 </body>
 </html>
